@@ -1,5 +1,7 @@
 import pygame
 from pygame.locals import *
+import math
+import numpy as np
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -53,35 +55,72 @@ class blocks():
 
 class paddle():
     def __init__(self):
-        self.init()
+        self.height = 20
+        self.width = int(screen_width / cols)
+        # center position
+        self.x = int((screen_width / 2))
+        self.y = screen_height - (self.height * 4)
+        self.speed = 10
+        self.direction = 0
+        self.rot = 0
+
+        self.image_orig = pygame.Surface((self.width, self.height))
+        self.image_orig.set_colorkey((0, 0, 0))
+        self.image_orig.fill(c_paddle)
+        self.rot = self.rot % 360
+        self.new_image = pygame.transform.rotate(self.image_orig, self.rot)
+        self.rect = self.new_image.get_rect()
 
     def move(self):
         self.direction = 0
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT] and self.rect.left > 0:
-            self.rect.x -= self.speed
+        if key[pygame.K_LEFT] and self.rect.x - self.width > 0:
+            self.x -= self.speed
             self.direction = -1
-        if key[pygame.K_RIGHT] and self.rect.right < screen_width:
-            self.rect.x += self.speed
+        if key[pygame.K_RIGHT] and self.rect.x + self.width < screen_width:
+            self.x += self.speed
             self.direction = 1
+        if key[pygame.K_1] and self.rot >= -5:
+            self.rot -= 1
+        if key[pygame.K_2] and self.rot <= 5:
+            self.rot += 1
 
     def draw(self):
-        pygame.draw.rect(screen, c_paddle, self.rect)
-        pygame.draw.rect(screen, c_paddleoutline, self.rect, 3)
+        rot = self.rot % 360
+        self.new_image = pygame.transform.rotate(self.image_orig, rot)
+        self.rect = self.new_image.get_rect()
+        self.rect.center = (self.x, self.y)
+        screen.blit(self.new_image, self.rect)
+        pygame.display.flip()
 
-
-    def init(self):
+    def reset(self):
         self.height = 20
         self.width = int(screen_width / cols)
-        self.x = int((screen_width / 2) - (self.width / 2))
+        # center position
+        self.x = int((screen_width / 2))
         self.y = screen_height - (self.height * 4)
         self.speed = 10
-        self.rect = Rect(self.x, self.y, self.width, self.height)
         self.direction = 0
+        self.rot = 0
+
+        self.image_orig = pygame.Surface((self.width, self.height))
+        self.image_orig.set_colorkey((0, 0, 0))
+        self.image_orig.fill(c_paddle)
+        self.rot = self.rot % 360
+        self.new_image = pygame.transform.rotate(self.image_orig, self.rot)
+        self.rect = self.new_image.get_rect()
 
 class game_ball():
     def __init__(self, x, y):
-        self.init(x, y)
+        self.ball_rad = 10
+        self.x = x - self.ball_rad
+        self.y = y - self.ball_rad
+        self.rect = Rect(self.x, self.y, self.ball_rad * 2, self.ball_rad * 2)
+        self.speedlen = math.sqrt(32)
+        self.speed_x = 4
+        self.speed_y = -4
+        self.speed_max = 5
+        self.game_over = 0
 
     def move(self):
 
@@ -127,17 +166,27 @@ class game_ball():
             self.game_over = -1
 
         # check if the collision was with paddle
-        if self.rect.colliderect(paddle):
-            # check if collision was from top
-            if abs(self.rect.bottom - paddle.rect.top) < collision_thresh and self.speed_y > 0:
-                self.speed_y *= -1
-                if self.speed_x > self.speed_max:
-                    self.speed_x = self.speed_max
-                elif self.speed_x < -self.speed_max:
-                    self.speed_x = -self.speed_max
-            # if the collision was with paddle side
-            else:
+        if self.rect.colliderect(paddle.rect):
+
+            # if the collision was with side
+            if((paddle.rect.x + paddle.width / 2 * math.cos(paddle.rot)) < self.rect.x - collision_thresh or self.rect.x + 2 * self.ball_rad + collision_thresh < (paddle.rect.x - paddle.width / 2 * math.cos(paddle.rot)) ):
                 self.speed_x *= -1
+                self.rect.x += self.speed_x
+                self.rect.y += self.speed_y
+                return self.game_over
+
+            
+            len = math.sqrt(self.speed_x ** 2 + self.speed_y ** 2)
+            vec_bo = np.array([self.speed_x, self.speed_y])
+            vec_oh = np.array([math.sin(paddle.rot), - math.cos(paddle.rot)])
+
+            vec_oa_reflect = - (vec_oh * vec_bo / (vec_oh[0] ** 2 + vec_oh[1] ** 2)) * vec_oh
+            vec_oa_parallel = vec_bo + vec_oa_reflect
+            self.speed_x = vec_oa_reflect[0] + vec_oa_parallel[0]
+            self.speed_y = vec_oa_reflect[1] + vec_oa_parallel[1]
+
+            self.speed_x = self.speed_x / len * self.speedlen
+            self.speed_y = self.speed_y / len * self.speedlen
 
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
@@ -145,16 +194,14 @@ class game_ball():
         return self.game_over
 
     def draw(self):
-        pygame.draw.circle(screen, c_paddle, (self.rect.x + self.ball_rad, self.rect.y + self.ball_rad),
-                           self.ball_rad)
-        pygame.draw.circle(screen, c_paddleoutline, (self.rect.x + self.ball_rad, self.rect.y + self.ball_rad),
-                           self.ball_rad, 3)
+        pygame.draw.circle(screen, c_ball, (self.rect.x + self.ball_rad, self.rect.y + self.ball_rad), self.ball_rad)
 
-    def init(self, x, y):
+    def reset(self, x, y):
         self.ball_rad = 10
         self.x = x - self.ball_rad
-        self.y = y
+        self.y = y - self.ball_rad
         self.rect = Rect(self.x, self.y, self.ball_rad * 2, self.ball_rad * 2)
+        self.speedlen = math.sqrt(32)
         self.speed_x = 4
         self.speed_y = -4
         self.speed_max = 5
@@ -177,34 +224,32 @@ if __name__ == '__main__':
     c_red = (242, 85, 96)
     c_green = (86, 174, 87)
     c_blue = (69, 177, 232)
-    c_orange = (255, 100, 0)
+    c_orange = (255, 160, 0)
     c_yellow = (255, 255, 0)
-    c_background = (234, 218, 184)
-    c_text = (78, 81, 139)
-    c_paddle = (142, 135, 123)
-    c_paddleoutline = (100, 100, 100)
+    c_white = (255, 255, 255)
+    c_background = (0, 0, 0)
+    c_buttontext = (78, 81, 139)
+    c_paddle = (200, 200, 200)
+    c_ball = (255, 255, 255)
 
     # font
     font = pygame.font.SysFont(None, 30)
 
     # block num
-    cols = 2
-    rows = 2
+    cols = 10
+    rows = 10
 
     # create objects
     blocks = blocks()
     blocks.create_blocks()
     paddle = paddle()
-    ball = game_ball(paddle.x + (paddle.width / 2), paddle.y - paddle.height)
+    ball = game_ball(paddle.x, paddle.y - paddle.height)
 
     carryon = True
     while carryon:
 
         clock.tick(fps)
         screen.fill(c_background)
-        blocks.draw_blocks()
-        paddle.draw()
-        ball.draw()
 
         if isBallExist:
             paddle.move()
@@ -218,24 +263,28 @@ if __name__ == '__main__':
             posy = screen_height / 3 * 2
             button = pygame.Rect(posx, posy, 80, 40)
             if game_over == 0:
-                pygame.draw.rect(screen, (255, 0, 0), button)
-                draw_text('START', font, c_text, posx + 8, posy + 12)
+                pygame.draw.rect(screen, c_white, button)
+                draw_text('START', font, c_buttontext, posx + 8, posy + 12)
             elif game_over == 1:
-                draw_text('CLEAR!', font, c_text, posx + 8, screen_height // 2 + 50)
-                pygame.draw.rect(screen, (255, 0, 0), button)
-                draw_text('START', font, c_text, posx + 8, posy + 12)
+                draw_text('CLEAR!', font, c_white, posx + 8, screen_height // 2 + 50)
+                pygame.draw.rect(screen, c_white, button)
+                draw_text('START', font, c_buttontext, posx + 8, posy + 12)
             elif game_over == -1:
-                draw_text('GAMEOVER!', font, c_text, posx-20, screen_height // 2 + 50)
-                pygame.draw.rect(screen, (255, 0, 0), button)
-                draw_text('START', font, c_text, posx + 8, posy + 12)
+                draw_text('GAMEOVER!', font, c_white, posx - 20, screen_height // 2 + 50)
+                pygame.draw.rect(screen, c_white, button)
+                draw_text('START', font, c_buttontext, posx + 8, posy + 12)
+
+        blocks.draw_blocks()
+        ball.draw()
+        paddle.draw()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 carryon = False
             if event.type == pygame.MOUSEBUTTONDOWN and button.collidepoint(event.pos) and isBallExist == False:
                 isBallExist = True
-                ball.init(paddle.x + (paddle.width // 2), paddle.y - paddle.height)
-                paddle.init()
+                ball.reset(paddle.x + (paddle.width / 2), paddle.y - paddle.height)
+                paddle.reset()
                 blocks.create_blocks()
         pygame.display.update()
 
