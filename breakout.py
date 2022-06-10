@@ -55,8 +55,8 @@ class blocks():
 
 class paddle():
     def __init__(self):
-        self.height = 20
-        self.width = int(screen_width / cols)
+        self.height = 3
+        self.width = int(screen_width / cols * 2)
         # center position
         self.x = int((screen_width / 2))
         self.y = screen_height - (self.height * 4)
@@ -74,7 +74,7 @@ class paddle():
     def move(self):
         self.direction = 0
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT] and self.rect.x - self.width > 0:
+        if key[pygame.K_LEFT] and self.rect.x > 0:
             self.x -= self.speed
             self.direction = -1
         if key[pygame.K_RIGHT] and self.rect.x + self.width < screen_width:
@@ -94,8 +94,8 @@ class paddle():
         pygame.display.flip()
 
     def reset(self):
-        self.height = 20
-        self.width = int(screen_width / cols)
+        self.height = 3
+        self.width = int(screen_width / cols * 2)
         # center position
         self.x = int((screen_width / 2))
         self.y = screen_height - (self.height * 4)
@@ -112,9 +112,9 @@ class paddle():
 
 class game_ball():
     def __init__(self, x, y):
-        self.ball_rad = 10
+        self.ball_rad = 5
         self.x = x - self.ball_rad
-        self.y = y - self.ball_rad
+        self.y = y - self.ball_rad * 2
         self.rect = Rect(self.x, self.y, self.ball_rad * 2, self.ball_rad * 2)
         self.speedlen = math.sqrt(32)
         self.speed_x = 4
@@ -168,25 +168,13 @@ class game_ball():
         # check if the collision was with paddle
         if self.rect.colliderect(paddle.rect):
 
-            # if the collision was with side
-            if((paddle.rect.x + paddle.width / 2 * math.cos(paddle.rot)) < self.rect.x - collision_thresh or self.rect.x + 2 * self.ball_rad + collision_thresh < (paddle.rect.x - paddle.width / 2 * math.cos(paddle.rot)) ):
-                self.speed_x *= -1
-                self.rect.x += self.speed_x
-                self.rect.y += self.speed_y
-                return self.game_over
-
-            
-            len = math.sqrt(self.speed_x ** 2 + self.speed_y ** 2)
             vec_bo = np.array([self.speed_x, self.speed_y])
-            vec_oh = np.array([math.sin(paddle.rot), - math.cos(paddle.rot)])
+            vec_oh = np.array([-math.sin(paddle.rot), - math.cos(paddle.rot)])
 
             vec_oa_reflect = - (vec_oh * vec_bo / (vec_oh[0] ** 2 + vec_oh[1] ** 2)) * vec_oh
             vec_oa_parallel = vec_bo + vec_oa_reflect
             self.speed_x = vec_oa_reflect[0] + vec_oa_parallel[0]
             self.speed_y = vec_oa_reflect[1] + vec_oa_parallel[1]
-
-            self.speed_x = self.speed_x / len * self.speedlen
-            self.speed_y = self.speed_y / len * self.speedlen
 
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
@@ -197,9 +185,9 @@ class game_ball():
         pygame.draw.circle(screen, c_ball, (self.rect.x + self.ball_rad, self.rect.y + self.ball_rad), self.ball_rad)
 
     def reset(self, x, y):
-        self.ball_rad = 10
+        self.ball_rad = 5
         self.x = x - self.ball_rad
-        self.y = y - self.ball_rad
+        self.y = y - self.ball_rad * 2
         self.rect = Rect(self.x, self.y, self.ball_rad * 2, self.ball_rad * 2)
         self.speedlen = math.sqrt(32)
         self.speed_x = 4
