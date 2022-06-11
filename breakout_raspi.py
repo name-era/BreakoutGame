@@ -198,9 +198,9 @@ class game_ball():
         self.y = y - self.radius
         self.rect = Rect(self.x, self.y, self.radius * 2, self.radius * 2)
         self.speedlen = math.sqrt(32)
-        self.speed_x = 8
-        self.speed_y = -8
-        self.speed_max = 10
+        self.speed_x = 4
+        self.speed_y = -4
+        self.speed_max = 5
         self.speed_min = 1
         self.game_over = 0
 
@@ -300,9 +300,9 @@ class game_ball():
         self.y = y - self.radius
         self.rect = Rect(self.x, self.y, self.radius * 2, self.radius * 2)
         self.speedlen = math.sqrt(32)
-        self.speed_x = 8
-        self.speed_y = -8
-        self.speed_max = 10
+        self.speed_x = 4
+        self.speed_y = -4
+        self.speed_max = 5
         self.speed_min = 1
         self.game_over = 0
 
