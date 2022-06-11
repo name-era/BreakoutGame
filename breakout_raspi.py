@@ -259,6 +259,7 @@ class game_ball():
             centertosurface = abs(relativepos[0] * math.tan(radian) + relativepos[1]) / math.sqrt(
                 math.tan(radian) ** 2 + 1)
             d = centertosurface - self.radius
+            thresh = 2
             if (d < collision_thresh):
                 # if the collision was with side
                 if ((paddle.x + paddle.width / 2 * math.cos(radian)) < self.rect.left + collision_thresh
@@ -270,18 +271,18 @@ class game_ball():
                     self.rect.y += self.speed_y
                     return self.game_over
 
-            alpha = math.radians(paddle.angle)
-            parallelvec = np.array([-math.cos(alpha), math.sin(alpha)])
-            verticalvec = np.array([math.sin(alpha), math.cos(alpha)])
-            incidentvec = np.array([self.speed_x, self.speed_y])
+                alpha = math.radians(paddle.angle)
+                parallelvec = np.array([-math.cos(alpha), math.sin(alpha)])
+                verticalvec = np.array([math.sin(alpha), math.cos(alpha)])
+                incidentvec = np.array([self.speed_x, self.speed_y])
 
-            vec_parallel = (np.dot(incidentvec, parallelvec) / (
-                        parallelvec[0] ** 2 + parallelvec[1] ** 2)) * parallelvec
-            vec_vertical = (np.dot(incidentvec, verticalvec) / (
-                        verticalvec[0] ** 2 + verticalvec[1] ** 2)) * verticalvec
+                vec_parallel = (np.dot(incidentvec, parallelvec) / (
+                            parallelvec[0] ** 2 + parallelvec[1] ** 2)) * parallelvec
+                vec_vertical = (np.dot(incidentvec, verticalvec) / (
+                            verticalvec[0] ** 2 + verticalvec[1] ** 2)) * verticalvec
 
-            self.speed_x = vec_parallel[0] - vec_vertical[0]
-            self.speed_y = vec_parallel[1] - vec_vertical[1]
+                self.speed_x = vec_parallel[0] - vec_vertical[0]
+                self.speed_y = vec_parallel[1] - vec_vertical[1]
 
 
         self.rect.x += self.speed_x
