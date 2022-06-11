@@ -235,20 +235,20 @@ class game_ball():
 
         if wall_destroyed == 1:
             self.game_over = 1
-            # check for collision with the window left or right
 
+        # check for collision with the window left or right
         if self.rect.left < 0 or self.rect.right > screen_width:
             self.speed_x *= -1
-            # check for collision with the window top
 
+        # check for collision with the window top
         if self.rect.top < 0:
             self.speed_y *= -1
-            # check for collision with the window bottom
 
+        # check for collision with the window bottom
         if self.rect.bottom > screen_height:
             self.game_over = -1
-            # check if the collision was with paddle
 
+        # check if the collision was with paddle
         if self.rect.colliderect(paddle.rect):
 
             # check distance
@@ -264,10 +264,11 @@ class game_ball():
                 if ((paddle.x + paddle.width / 2 * math.cos(radian)) < self.rect.left + collision_thresh
                     or self.rect.right - collision_thresh < (paddle.x - paddle.width / 2 * math.cos(radian))) \
                     or paddle.y < self.rect.bottom - collision_thresh:
-                self.speed_x *= -1
-                self.rect.x += self.speed_x
-                self.rect.y += self.speed_y
-                return self.game_over
+
+                    self.speed_x *= -1
+                    self.rect.x += self.speed_x
+                    self.rect.y += self.speed_y
+                    return self.game_over
 
             alpha = math.radians(paddle.angle)
             parallelvec = np.array([-math.cos(alpha), math.sin(alpha)])
@@ -288,22 +289,22 @@ class game_ball():
         return self.game_over
 
 
-def draw(self):
-    pygame.draw.circle(screen, c_ball, (self.rect.x + self.radius, self.rect.y + self.radius), self.radius)
+    def draw(self):
+        pygame.draw.circle(screen, c_ball, (self.rect.x + self.radius, self.rect.y + self.radius), self.radius)
 
 
-def reset(self, x, y):
+    def reset(self, x, y):
 
-    self.radius = 10
-    self.x = x - self.radius
-    self.y = y - self.radius
-    self.rect = Rect(self.x, self.y, self.radius * 2, self.radius * 2)
-    self.speedlen = math.sqrt(32)
-    self.speed_x = 8
-    self.speed_y = -8
-    self.speed_max = 10
-    self.speed_min = 1
-    self.game_over = 0
+        self.radius = 10
+        self.x = x - self.radius
+        self.y = y - self.radius
+        self.rect = Rect(self.x, self.y, self.radius * 2, self.radius * 2)
+        self.speedlen = math.sqrt(32)
+        self.speed_x = 8
+        self.speed_y = -8
+        self.speed_max = 10
+        self.speed_min = 1
+        self.game_over = 0
 
 
 if __name__ == '__main__':
@@ -365,7 +366,6 @@ if __name__ == '__main__':
                 sensor_data = th.get_data()
                 # sensor_dataha 1 to 3, mid is about 2.18
                 paddle.angle = -(sensor_data[3] - 2.18) * 20
-                # message
 
         if not isBallExist:
 
